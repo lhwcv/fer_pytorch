@@ -1,5 +1,10 @@
 # fer_pytorch
 Face Expression Recognition in Pytorch 
+### Install
+```
+git clone https://github.com/lhwcv/fer_pytorch
+cd fer_pytorch && python setup.py install
+```
 
 ### Baseline Performance
 
@@ -25,10 +30,15 @@ model| im_size| acc| recall| F1
 res50| 224| -|-|-
 mobile_v2|224|-|-|-
 
-###  tools
+###  Tools
 #### Face detect by MTCNN
 See `examples/face_detect_mtcnn.py`
 ```
+import cv2
+import os
+import torch
+from fer_pytorch.face_detect import  MTCNN
+
 mtcnn = MTCNN(
         image_size = 224,
         min_face_size = 40,
