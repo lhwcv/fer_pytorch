@@ -1,0 +1,6 @@
+.idea/
+build/
+dist/
+*.pyc
+fer_pytorch.egg-info/
+examples/data/1_det.jpg
