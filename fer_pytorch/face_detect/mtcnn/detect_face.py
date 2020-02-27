@@ -53,6 +53,8 @@ def detect_face(imgs, minsize, pnet, rnet, onet, threshold, factor, device):
         image_inds.append(image_inds_scale)
         all_inds.append(all_i + image_inds_scale)
         all_i += batch_size
+    if len(boxes)==0:
+        return [], []
 
     boxes = torch.cat(boxes, dim=0)
     image_inds = torch.cat(image_inds, dim=0).cpu()

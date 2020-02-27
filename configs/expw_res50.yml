@@ -1,0 +1,9 @@
+DATA:
+  train_label_path: './cache/ExpW_train.lst'
+  val_label_path: './cache/ExpW_val.lst'
+
+TRAIN:
+  save_dir: '/home/lhw/data_disk_fast/comp_workspace/saved_model/fer_expw_res50/'
+
+MODEL:
+  model_name: 'res50'
