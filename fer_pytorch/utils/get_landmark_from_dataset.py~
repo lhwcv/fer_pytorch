@@ -96,7 +96,6 @@ if __name__ =='__main__':
 
     affiner = affine_img_with_five_landmark()
     
-    img = cv2.imread('1.jpg')
+    img = cv2.imread('../../exmaples/data/1.jpg')
     dst=affiner.face_affiner(img)
-    
     cv2.imwrite('1_affine.jpg', dst)
