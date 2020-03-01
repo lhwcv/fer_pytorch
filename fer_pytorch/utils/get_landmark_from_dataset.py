@@ -1,5 +1,6 @@
-import cv2
 import os, sys
+# sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
+import cv2
 import torch
 from fer_pytorch.face_detect import  MTCNN
 import numpy
@@ -95,7 +96,8 @@ class affine_img_with_five_landmark:
 if __name__ =='__main__':
 
     affiner = affine_img_with_five_landmark()
-    
-    img = cv2.imread('../../exmaples/data/1.jpg')
+    img_path = 'examples/data/1.jpg'
+    img = cv2.imread(img_path)
+    #embed()    
     dst=affiner.face_affiner(img)
-    cv2.imwrite('../../exmaples/data/1_affine.jpg', dst)
+    cv2.imwrite('examples/data/1_affine.jpg', dst)

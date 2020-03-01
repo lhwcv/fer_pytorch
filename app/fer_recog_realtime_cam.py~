@@ -56,7 +56,7 @@ if __name == "__main__":
         t = time.time()
         save_path = str(Path(output) / Path(path).name) 
         # Get detections and align
-        img=affiner.face_affiner(img)   # 不好,最好分离
+        img=affiner.face_affiner(img)   # 不好,
         
         img = torch.from_numpy(img).unsqueeze(0).to(device) # torch.Size([1, 3, 416, 320])
         pred_loggits = model(img)  
