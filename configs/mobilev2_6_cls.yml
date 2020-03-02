@@ -2,7 +2,7 @@ DATA:
   input_size: 256
 
 TEST:
-  model_load_path: './weights/best_acc.pth'
+  model_load_path: './weights/best_acc_6_cls.pth'
 
 MODEL:
   model_name: 'mobilenet_v2'

@@ -1,3 +1,4 @@
+#coding=utf-8
 import os, sys
 import numpy as np
 import torch
@@ -18,7 +19,7 @@ from fer_pytorch.datasets.aug import fer_test_aug
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config",
-                        default='./configs/mobilev2_6_cls.yml',
+                        default='./configs/mobilev2_4_cls.yml',
                         type=str,
                         help="模型配置文件路径")
     parser.add_argument('--images', type=str, default='./examples/data/', help='需要进行检测的图片文件夹')
