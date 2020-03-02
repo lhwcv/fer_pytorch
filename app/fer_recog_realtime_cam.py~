@@ -1,16 +1,62 @@
 import os, sys
 import numpy as np
 import torch
-
-from fer_pytorch.utils.get_landmark_from_dataset import affine_img_with_five_landmark
-
-
-if __name == "__main__":
-    weights = ''
-    images='reid_data/samples',  # input folder
-   output='output',  # output folder
+from fer_pytorch.face_detect import MTCNN
+from fer_pytorch.face_align import FaceAlign
+from IPython import embed
 
 
+
+class LoadWebcam:  # for inference
+    def __init__(self, img_size=416, half=False, det_type='ctdet'):
+        self.img_size = img_size
+        self.half = half  # half precision fp16 images
+        self.det_type = det_type
+        pipe = 0  # local camera
+
+        self.cap = cv2.VideoCapture(pipe)  # video capture object
+        self.mode = 'webcam'
+
+    def __iter__(self):
+        self.count = -1
+        return self
+
+    def __next__(self):
+        self.count += 1
+        if cv2.waitKey(1) == 27:  # esc to quit
+            cv2.destroyAllWindows()
+            raise StopIteration
+
+        # Read image
+        ret_val, img0 = self.cap.read()
+        assert ret_val, 'Webcam Error'
+        img_path = 'webcam_%g.jpg' % self.count
+        img0 = cv2.flip(img0, 1)  # flip left-right
+        print('webcam %g: ' % self.count, end='')
+
+        if self.det_type == 'ctdet':
+            return img_path, None, img0, None
+
+        # Padded resize
+        img, *_ = letterbox(img0, new_shape=self.img_size)
+
+        # Normalize RGB
+        img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR -> RGB, 通道转换 (h , w , ch) -> (ch ,h, w)
+        img = np.ascontiguousarray(img, dtype=np.float16 if self.half else np.float32)  # uint8 to fp16/fp32
+        img /= 255.0  # 0 - 255 to 0.0 - 1.0
+
+        return img_path, img, img0, None
+
+    def __len__(self):
+        return 0
+
+class LoadImages:
+    def __init__(self, path, img_size=416, half=False):
+        raise NotImplementedError
+
+
+def detect(weights, images=None, output=None, webcam=True):
+   
     # Initialize
     device = 'cpu' # cpu or gpu
     torch.backends.cudnn.benchmark = False  # set False for reproducible results
@@ -18,13 +64,15 @@ if __name == "__main__":
         shutil.rmtree(output)  # remove previous result
     os.makedirs(output)       
 
-    affiner = affine_img_with_five_landmark()
-    
-    
+    mtcnn = MTCNN(
+        image_size = 224,
+        min_face_size = 40,
+#         device=torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        device=torch.device( 'cpu')
     
 
     # Load weights
-    if weights.endswith('.pth'):  # pytorch format
+    if weights.endwith('pth'):
         model.load_state_dict(torch.load(weights, map_location=device)['model'])
     else:  # other format
        raise NotImplementedError
@@ -40,7 +88,7 @@ if __name == "__main__":
 
     # Set Dataloader
     vid_path, vid_writer = None, None
-    if opt.webcam:
+    if webcam:
         save_images = False
         dataloader = LoadWebcam(img_size=img_size, half=opt.half)
     else:
@@ -52,17 +100,44 @@ if __name == "__main__":
 
     # Run inference
     t0 = time.time()
-    for i, (path, img, im0, vid_cap) in enumerate(dataloader):
+    for i, (path, img, img0, vid_cap) in enumerate(dataloader):
         t = time.time()
         save_path = str(Path(output) / Path(path).name) 
         # Get detections and align
-        img=affiner.face_affiner(img)   # 不好,
+
+        if img.dtype != 'uint8': # check whether image or not 
+            raise RuntimeError('dtype of numpy array is not uint8!!! check it !!!')
+
+        bboxs, scores, landmarks = mtcnn.detect(img, landmarks=True)
+
+        cls_faces = []
+        for face_id, bbox in enumerate(bboxs):
+            ori_landmark = landmarks[face_id]
+            ori_landmark = ori_landmark.append(bbox[0])
+            ori_landmark = ori_landmark.append(bbox[3])
+            
+            alignedImg = FaceAlign(img, ori_landmark, 255, use_bbox=True):
         
-        img = torch.from_numpy(img).unsqueeze(0).to(device) # torch.Size([1, 3, 416, 320])
-        pred_loggits = model(img)  
-        pred_loggits = pred_loggits.softmax(dim=-1)
+            alignedImg = torch.from_numpy(alignedImg).unsqueeze(0).to(device) # torch.Size([1, 3, 416, 320])
+            pred_loggits = model(alignedImg)  
+            pred_loggits = pred_loggits.softmax(dim=-1)
+            cls = np.argmax(pred_loggits)
+            cls_faces.append(cls)
+            print(classes[int(cls)])
 
-        cls = np.argmax(pred_loggits)
-        print(classes[int(cls)])
+        for face_id, bbox in enumerate(bboxs):                               
+            plot_one_box(bbox, img, label=classes[face_id], color=colors[int(classes[face_id])])
 
-        plot_one_box(xyxy, im0, label=label, color=colors[int(cls)])
+        if webcam:  # Show live webcam
+            cv2.imshow("fer", img)
+        
+
+if __name == "__main__":
+    weights = ''
+    images='reid_data/samples'  # input folder
+    output='output'  # output folder
+    webcam = True
+
+    with torch.no_grad():
+        detect(weights, images, output, webcam=True)
+
