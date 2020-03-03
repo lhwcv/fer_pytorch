@@ -1,0 +1,9 @@
+DATA:
+  input_size: 256
+
+TEST:
+  model_load_path: './weights/best_acc_4_cls.pth'
+
+MODEL:
+  model_name: 'mobilenet_v2'
+  num_classes: 6
