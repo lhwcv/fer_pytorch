@@ -37,7 +37,7 @@ def build_model(cfg):
         return  m
 
     if model_name == 'mobilenet_v2':
-        m =  mobilenet_v2(num_classes = num_classes, pretrained=False)
+        m =  mobilenet_v2(num_classes = num_classes)
         m.classifier = torch.nn.Linear(m.classifier.in_features, num_classes)
         return m
 
