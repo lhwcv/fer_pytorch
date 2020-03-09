@@ -5,13 +5,13 @@ from  fer_pytorch.datasets import  get_fer_train_dataloader,get_fer_val_dataload
 
 from  fer_pytorch.models.build_model import  build_model
 
-from  fer_pytorch.loss.softmaxloss import  CrossEntropyLabelSmooth
+from  fer_pytorch.loss.softmaxloss import  CrossEntropyLabelSmooth,CrossEntropyLabelSmooth_OHEM
 from  fer_pytorch.optim.optimizer.nadam import Nadam
 from  fer_pytorch.optim.lr_scheduler import WarmupMultiStepLR
 
 from tools.simple_learner import  SimpleLearner
 
-from  fer_pytorch.utils.common import setup_seed
+from  fer_pytorch.utils.common import setup_seed,create_dir_maybe
 
 import  argparse
 def get_args():
@@ -29,13 +29,15 @@ def train(cfg):
     model = build_model(cfg)
     model = model.cuda()
 
-    loss_fn = CrossEntropyLabelSmooth(num_classes = cfg.MODEL.num_classes)
+    #loss_fn = CrossEntropyLabelSmooth(num_classes = cfg.MODEL.num_classes)
+    loss_fn = CrossEntropyLabelSmooth_OHEM(cfg.MODEL.num_classes, 0.1, 0.7)
     optimizer = Nadam(params=model.parameters(),lr=cfg.TRAIN.learning_rate)
     lr_scheduler = WarmupMultiStepLR(
         optimizer,
         milestones= cfg.TRAIN.milestones,
         gamma = cfg.TRAIN.lr_decay_gamma
     )
+    create_dir_maybe(cfg.TRAIN.save_dir)
     logger = TxtLogger(cfg.TRAIN.save_dir + "/logger.txt")
     learner =  SimpleLearner(
         model = model,

@@ -1,4 +1,5 @@
 from yacs.config import CfgNode as CN
+__all_ = ['get_fer_cfg_defaults']
 
 _C = CN()
 _C.SYSTEM = CN()
@@ -6,7 +7,7 @@ _C.SYSTEM.NUM_GPUS = 1
 _C.SYSTEM.NUM_WORKERS = 2
 
 _C.DATA = CN()
-_C.DATA.input_size = 224
+_C.DATA.input_size = 256
 _C.DATA.crop_residual_pix = 16
 _C.DATA.dataset_type = 'ExpW'
 _C.DATA.img_dir = '/home/lhw/yangzhi/FaceExpRecog/2.data/ExpW/image/origin/'
@@ -31,7 +32,7 @@ _C.TRAIN.device_ids_str = "0"
 _C.TRAIN.device_ids = [0]
 _C.TRAIN.log_steps = 200
 _C.TRAIN.adam_epsilon = 1e-6
-_C.TRAIN.early_stop_n = 3
+_C.TRAIN.early_stop_n = 4
 _C.TRAIN.device_ids_str = "0"
 _C.TRAIN.device_ids = [0]
 

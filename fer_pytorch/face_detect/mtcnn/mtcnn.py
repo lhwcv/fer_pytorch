@@ -188,7 +188,7 @@ class MTCNN(nn.Module):
 
     def __init__(
         self, image_size=160, margin=0, min_face_size=20,
-        thresholds=[0.6, 0.7, 0.7], factor=0.709, post_process=True,
+        thresholds=[0.6, 0.7, 0.6], factor=0.709, post_process=True,
         select_largest=True, keep_all=False, device=None
     ):
         super().__init__()

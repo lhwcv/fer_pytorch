@@ -15,11 +15,12 @@ import time
 from pathlib import Path
 from fer_pytorch.utils.common import setup_seed
 from fer_pytorch.datasets.aug import fer_test_aug
-
+import os
+DIR = os.path.dirname(__file__)
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config",
-                        default='./configs/mobilev2_4_cls.yml',
+                        default=DIR+ '/../configs/mobilev2_4_cls.yml',
                         type=str,
                         help="模型配置文件路径")
     parser.add_argument('--images', type=str, default='./examples/data/', help='需要进行检测的图片文件夹')
@@ -32,6 +33,24 @@ def get_args():
 
 
 def plot_one_box(x, img, color=None, label=None, line_thickness=None):
+    # Plots one bounding box on image img
+    tl = line_thickness or round(0.002 * (img.shape[0] + img.shape[1]) / 2) + 1  # line thickness
+    color = color or [random.randint(0, 255) for _ in range(3)]
+    c1, c2 = (int(x[0]), int(x[1])), (int(x[2]), int(x[3]))  #
+    clb = c1[0], c2[1]
+    cv2.rectangle(img, c1, c2, color, thickness=tl)
+    if label:
+        tf = max(tl - 1, 1)  # font thickness
+        t_size = cv2.getTextSize(label, 0, fontScale=tl / 3, thickness=tf)[0]
+        #c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
+        #cv2.rectangle(img, c1, c2, color, -1)  # filled
+        #cv2.putText(img, label, (c1[0], c1[1] - 2), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
+        clb2 = clb[0] + t_size[0], clb[1] + t_size[1] + 3
+        #c1 = c2[0] - t_size[0], c2[1] + t_size[1] + 3
+        cv2.rectangle(img, clb, clb2, color, -1)  # filled
+        cv2.putText(img, label, (clb[0], clb2[1] - 2), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
+
+def plot_one_box_with_prob(x, img, color=None, label=None, line_thickness=None):
     # Plots one bounding box on image img
     tl = line_thickness or round(0.002 * (img.shape[0] + img.shape[1]) / 2) + 1  # line thickness
     color = color or [random.randint(0, 255) for _ in range(3)]
@@ -75,7 +94,7 @@ class LoadWebcam:  # for inference
         assert ret_val, 'Webcam Error'
         img_path = 'webcam_%g.jpg' % self.count
         img0 = cv2.flip(img0, 1)  # flip left-right
-        print('webcam %g: ' % self.count, end='')
+        #print('webcam %g: ' % self.count, end='')
 
         return img_path, img0, None
 
@@ -105,8 +124,8 @@ def detect(cfg,
     os.makedirs(output)
 
     mtcnn = MTCNN(
-        image_size=224,
-        min_face_size=40,
+        image_size=160,
+        min_face_size=80,
         #         device=torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         device=torch.device('cpu'))
 
@@ -143,26 +162,39 @@ def detect(cfg,
 
     # Run inference
     t0 = time.time()
+    happy_score = 0.0
+    nn = 0
     for i, (path, img, vid_cap) in enumerate(dataloader):
+        if i<5:
+           continue
         t = time.time()
         save_path = str(Path(output) / Path(path).name) 
         # Get detections and align
 
         if img.dtype != 'uint8': # check whether image or not
             raise RuntimeError('dtype of numpy array is not uint8!!! check it !!!')
-
-        bboxs, scores, landmarks = mtcnn.detect(img, landmarks=True)
+        rgbimg = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        bboxs, scores, landmarks = mtcnn.detect(rgbimg, landmarks=True)
 
         cls_faces = []
+
+
         if bboxs is not None:
             landmarks = landmarks.tolist()
             for face_id, bbox in enumerate(bboxs):
                 ori_landmark = landmarks[face_id]
                 # embed()
-                ori_landmark.append([bbox[0], bbox[1]])
-                ori_landmark.append([bbox[2], bbox[3]])
+                #ori_landmark.append([bbox[0], bbox[1]])
+                #ori_landmark.append([bbox[2], bbox[3]])
 
-                alignedImg = FaceAlign(img, ori_landmark, 255, use_bbox=True)
+                alignedImg = img[
+                             int(bbox[1]): int(bbox[3]),
+                             int(bbox[0]): int(bbox[2])
+                             ]
+                alignedImg = FaceAlign(img, ori_landmark, 255, use_bbox=False)
+
+                cv2.imshow("crop", alignedImg)
+                cv2.waitKey(10)
 
                 alignedImg = cv2.cvtColor(alignedImg, cv2.COLOR_BGR2RGB)
                 alignedImg = aug(image=alignedImg)['image']
@@ -171,16 +203,52 @@ def detect(cfg,
                 alignedImg = alignedImg.unsqueeze(0)
 
                 pred_loggits = model(alignedImg)
+                #print(pred_loggits)
+
                 pred_loggits = pred_loggits.softmax(dim=-1)
+                #pred_loggits[0][1] += 0.2
+                #pred_loggits[0][2] += 0.2
+                #pred_loggits[0][4] -= 0.1
                 cls = np.argmax(pred_loggits)
+                pred_loggits[0][3] += 0.05
                 cls_faces.append(cls)
-                print(classes[int(cls)])
+                score = pred_loggits[0][cls].item()
+                #print(classes[int(cls)],score, pred_loggits)
+                #if int(cls)==0:
+
+                happy_score+=pred_loggits[0][0]
+                nn += 1
 
             for face_id, bbox in enumerate(bboxs):
-                plot_one_box(bbox, img, label=classes[cls_faces[face_id]], color=colors[int(cls_faces[face_id])])
 
-            if args.webcam:  # Show live webcam
-                cv2.imshow("fer", img)
+                label = (classes[cls_faces[face_id]]+': {:.3f}'.format(score))
+                if cls_faces[face_id]!=0 or score <0.7:
+                    label=None
+                plot_one_box(bbox, img,
+                             label = label,
+                             color = colors[int(cls_faces[face_id])])
+
+        if args.webcam:  # Show live webcam
+            cv2.imshow("fer", img)
+            cv2.waitKey(10)
+        if i%18 == 1 and i>18:
+            if nn==0:
+                nn=1
+            avg_score = 100*2 * happy_score / nn
+            print("Happy score: ", avg_score)
+            happy_score=0
+            nn = 0
+            img[:,:,1] = 0
+            cv2.putText(img, "Score: {}".format(float(avg_score)), (50, 50), 0, 1.0, [225, 255, 255], thickness=3,
+                        lineType=cv2.LINE_AA)
+            cv2.putText(img, "click to retry", (100, 100), 0, 1.0, [225, 255, 255], thickness=3,
+                        lineType=cv2.LINE_AA)
+            cv2.imshow("fer", img)
+            cv2.waitKey(0)
+
+            #break
+
+    print("Happy score: ", 2*happy_score/nn)
         
 
 if __name__ == "__main__":
@@ -193,6 +261,7 @@ if __name__ == "__main__":
     print('using config: ',args.config.strip())
     cfg.merge_from_file(args.config)
     print(cfg)
+    cfg.TEST.model_load_path = DIR+'/../'+cfg.TEST.model_load_path
 
     with torch.no_grad():
         detect(cfg,

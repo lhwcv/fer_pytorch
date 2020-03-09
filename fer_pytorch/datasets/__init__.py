@@ -1,10 +1,11 @@
 from  torch.utils.data import  Dataset,DataLoader
 from fer_pytorch.datasets.ExpW import  ExpW_Dataset
+from fer_pytorch.datasets.FER2013 import  FER2013_Dataset
 #from  fer_pytorch.datasets.AffectNet import  AffectNet_Dataset
 
 __mapping_dataset = {
     'ExpW': ExpW_Dataset,
-    #'AffectNet':AffectNet_Dataset
+    'FER2013':FER2013_Dataset
 }
 
 def get_dataset(cfg, is_train = True):

@@ -1,0 +1,13 @@
+DATA:
+  dataset_type: 'FER2013'
+  train_label_path: '../data/FER2013/fer2013_train.h5'
+  val_label_path: '../data/FER2013/fer2013_val.h5'
+  wanted_catogories: [ ['happy'],['neutral'], ['sad'],['angry'],['disgust'],['fear'],['surprised']]
+
+TRAIN:
+  save_dir: '../saved_model/fer2013_mobilev2/'
+  learning_rate: 0.00008
+  milestones: [2000, 4000, 6000]
+MODEL:
+  model_name: 'mobilenet_v2'
+  num_classes: 7

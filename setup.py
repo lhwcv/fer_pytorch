@@ -18,9 +18,9 @@ setuptools.setup(
     long_description="",
     long_description_content_type='text/markdown',
     url = GITHUB_URL,
-    packages=find_packages(include=('fer_pytorch')),
-    package_dir={'fer_pytorch':'.'},
-    package_data={'': ['*net.pt']},
+    packages=find_packages(exclude=('weights','configs')),
+    package_dir={'fer_pytorch':'./fer_pytorch'},
+    package_data={'fer_pytorch.face_detect': ['data/*net.pt']},
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

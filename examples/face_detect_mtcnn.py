@@ -11,7 +11,7 @@ def main():
 
     mtcnn = MTCNN(
         image_size = 224,
-        min_face_size = 40,
+        min_face_size = 80,
         device=torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     )
 

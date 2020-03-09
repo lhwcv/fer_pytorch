@@ -8,15 +8,17 @@ from fer_pytorch.datasets.base import FER_Dataset
 class ImageList_Dataset(FER_Dataset):
     def __init__(self,
                  cfg,
-                 img_path_list,
+                 img_list,
                  labels_list = None,
                  is_train = False,
-                 xyxy = None):
+                 xyxy = None,
+                 read_img_from_file = False):
         super(ImageList_Dataset, self).__init__()
         self.cfg = cfg
-        self.img_path_list = img_path_list
+        self.img_list = img_list
         self.labels_list = labels_list
         self.xyxy = xyxy
+        self.read_img_from_file = read_img_from_file
         if is_train:
             self.aug = fer_train_aug(cfg.DATA.input_size,
                                      cfg.DATA.crop_residual_pix)
@@ -24,13 +26,16 @@ class ImageList_Dataset(FER_Dataset):
             self.aug = fer_test_aug(cfg.DATA.input_size)
 
     def __len__(self):
-        return len(self.img_path_list)
+        return len(self.img_list)
 
     def __getitem__(self, idx):
-        path = self.img_path_list[idx]
-        path = os.path.join(self.cfg.DATA.img_dir, path)
-        assert os.path.exists(path), path
-        img = cv2.imread(path)
+        if self.read_img_from_file:
+            path = self.img_list[idx]
+            path = os.path.join(self.cfg.DATA.img_dir, path)
+            assert os.path.exists(path), path
+            img = cv2.imread(path)
+        else:
+            img = self.img_list[idx]
         if self.xyxy is not  None:
             x0,y0,x1,y1 = self.xyxy[0][idx], self.xyxy[1][idx],\
                           self.xyxy[2][idx], self.xyxy[3][idx]
