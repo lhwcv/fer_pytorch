@@ -1,0 +1,19 @@
+DATA:
+  dataset_type: 'head_landmark'
+  input_size: 72
+  label_dir:  '/home/lhw/data/FaceDataset/LS3D_W_CZUR_9_landmark/'
+
+TRAIN:
+  save_dir: '/home/lhw/m2_disk/work_dir/head_landmark_mobilev2_72/'
+  warmup_steps: 100
+  learning_rate: 0.0001
+  milestones:  [4000, 8000]
+  batch_size: 256
+  early_stop_n: 5
+  weight_decay: 0.0
+TEST:
+  model_load_path: '/home/lhw/m2_disk/work_dir/head_landmark_mobilev2_72/best.pth'
+
+MODEL:
+  model_name: 'mobilenet_v2_landmark9'
+  num_classes: 18

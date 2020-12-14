@@ -43,6 +43,7 @@ _C.TEST.model_load_path = '/home/lhw/data_disk_fast/comp_workspace/saved_model/f
 _C.TEST.save_dir = '/home/lhw/data_disk_fast/comp_workspace/saved_model/test_log/'
 _C.TEST.device_ids_str = "0"
 _C.TEST.device_ids = [0]
+_C.TEST.cp_err_images_to_dir =''
 
 _C.MODEL = CN()
 _C.MODEL.model_name = 'se_resnext50_32x4d'

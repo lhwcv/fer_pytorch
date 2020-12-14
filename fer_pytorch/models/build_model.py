@@ -7,7 +7,7 @@ from  fer_pytorch.models.backbone.senet import (
 )
 
 from  fer_pytorch.models.backbone.mobilenet_v2 import  mobilenet_v2
-
+from  fer_pytorch.models.backbone.mobilenet_v3_small import  mobilenetv3
 
 def modify_resnet_fc(model, n_class):
     in_features = model.last_linear.in_features
@@ -38,7 +38,21 @@ def build_model(cfg):
 
     if model_name == 'mobilenet_v2':
         m =  mobilenet_v2(num_classes = num_classes)
-        m.classifier = torch.nn.Linear(m.classifier.in_features, num_classes)
+        m.classifier = torch.nn.Sequential(
+            torch.nn.Dropout(0.3),
+            torch.nn.Linear(m.classifier.in_features, num_classes))
+        #m.classifier = torch.nn.Linear(m.classifier.in_features, num_classes)
+        return m
+    if model_name == 'mobilenet_v2_landmark9':
+        m =  mobilenet_v2(num_classes = num_classes)
+        m.classifier = torch.nn.Sequential(
+            torch.nn.Linear(m.classifier.in_features, 18),
+            #torch.nn.Sigmoid()
+        )
+        return m
+
+    if model_name == 'mobilenet_v3_small':
+        m = mobilenetv3(pretrained=True, n_class=2, input_size=cfg.DATA.input_size, dropout=0.3)
         return m
 
     raise  NotImplementedError('{} no such models'.format(model_name))

@@ -31,7 +31,7 @@ def train(cfg):
 
     #loss_fn = CrossEntropyLabelSmooth(num_classes = cfg.MODEL.num_classes)
     loss_fn = CrossEntropyLabelSmooth_OHEM(cfg.MODEL.num_classes, 0.1, 0.7)
-    optimizer = Nadam(params=model.parameters(),lr=cfg.TRAIN.learning_rate)
+    optimizer = Nadam(params=model.parameters(),lr=cfg.TRAIN.learning_rate,weight_decay=cfg.TRAIN.weight_decay)
     lr_scheduler = WarmupMultiStepLR(
         optimizer,
         milestones= cfg.TRAIN.milestones,

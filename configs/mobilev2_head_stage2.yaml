@@ -1,0 +1,20 @@
+DATA:
+  dataset_type: 'head_stage2'
+  input_size: 72
+  label_dir: '/home/lhw/m2_disk/data/DataForStage2_label/'
+  crop_residual_pix: 8
+
+TRAIN:
+  save_dir: '/home/lhw/m2_disk/work_dir/head_stage2_mobilev2_72/'
+  warmup_steps: 100
+  learning_rate: 0.0008
+  milestones:  [400, 1000, 1500]
+  batch_size: 512
+  early_stop_n: 5
+  weight_decay: 0.0001
+TEST:
+  model_load_path: '/home/lhw/m2_disk/work_dir/head_stage2_mobilev2_72/best.pth'
+
+MODEL:
+  model_name: 'mobilenet_v2'
+  num_classes: 2

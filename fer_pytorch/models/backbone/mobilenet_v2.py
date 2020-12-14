@@ -147,8 +147,21 @@ def mobilenet_v2(num_classes = 1000, pretrained=True):
 
 
 if __name__ == '__main__':
-    net = mobilenet_v2(True)
+    import  torch
+    net = mobilenet_v2(1000,False)
+    #net = mobilenetv3(pretrained=True, n_class=2, input_size=96, dropout=0.2)
+    from thop import profile
 
+    test_data = torch.rand(1, 3, 96, 96)
+    flops, params = profile(net, inputs=(test_data,))
+    # print(flops)
+    # print(params)
+    print('Total params: %.2fM' % (params / 1000000.0))
+    print('Total flops: %.2fM' % (flops / 1000000.0))
+
+    outs = net(test_data)
+    for out in outs:
+        print(out.shape)
 
 
 

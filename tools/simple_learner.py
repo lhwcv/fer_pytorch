@@ -70,7 +70,7 @@ class SimpleLearner():
         }
 
     def _batch_trans(self, batch):
-        batch = tuple(t.to(self.device_ids[0]) for t in batch)
+        batch = tuple(t.to(self.device_ids[0]) for t in batch if isinstance(t, torch.Tensor))
         if self.batch_to_model_inputs_fn is None:
             batch_data = {
                 'imgs': batch[0],
